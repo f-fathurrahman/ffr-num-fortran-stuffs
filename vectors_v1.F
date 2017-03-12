@@ -1,4 +1,3 @@
-
 PROGRAM vectors
 
   IMPLICIT NONE 
