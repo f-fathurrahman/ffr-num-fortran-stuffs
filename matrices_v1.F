@@ -5,7 +5,7 @@ PROGRAM matrices
 
   Mat :: A, B
   PetscInt :: N
-  PetscInt :: Istart, Iend, i, j
+  PetscInt :: irow, icol
   PetscBool :: flg
   PetscScalar :: v
   PetscErrorCode :: ierr
@@ -19,7 +19,7 @@ PROGRAM matrices
     WRITE(*,*) 'Hello there ...'
   ENDIF 
 
-  N = 30 ! default value for N
+  N = 5 ! default value for N
   CALL PetscOptionsGetInt( PETSC_NULL_OBJECT, PETSC_NULL_CHARACTER, &
                            '-N', N, flg, ierr )
   IF( rank == 0 ) THEN 
@@ -33,16 +33,20 @@ PROGRAM matrices
   CALL MatSetFromOptions( A, ierr )
   CALL MatSetUp( A, ierr )
 
-  !CALL MatGetOwnershipRange( A, Istart, Iend, ierr )
-  DO i = 1, N
-    DO j = 1, N
-      v = 10.0*i + j
-      CALL MatSetValues( A, 1, i, 1, j, v, INSERT_VALUES, ierr )
-    ENDDO 
-  ENDDO 
+  IF ( rank == 0 ) THEN 
+    DO irow = 0, N-1
+      DO icol = 0, N-1  ! start from zero !!
+        v = 10.0*irow + icol
+        CALL MatSetValues( A, 1, irow, 1, icol, v, INSERT_VALUES, ierr )
+        !WRITE(*,*) 'row, col, ierr = ', irow, icol, ierr
+      ENDDO 
+    ENDDO
+  ENDIF
 
-  CALL MatAssemblyBegin( A, MAT_FINAL_ASSEMBLY )
-  CALL MatAssemblyEnd( A, MAT_FINAL_ASSEMBLY )
+  CALL MatAssemblyBegin( A, MAT_FINAL_ASSEMBLY, ierr )
+  CALL MatAssemblyEnd( A, MAT_FINAL_ASSEMBLY, ierr )
+
+  CALL MatView( A, PETSC_VIEWER_STDOUT_WORLD, ierr )
 
   CALL PetscFinalize( ierr )
 
